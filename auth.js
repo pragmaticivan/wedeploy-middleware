@@ -43,7 +43,7 @@ function extractAuthorizationFromHeader(req) {
         return {bearer: true, token: header};
       case 'Basic': {
         let auth = Buffer.from(header, 'base64').toString('utf8').split(':');
-        return {basic: true, user: auth[0], pass: auth[1]};
+        return {basic: true, user: auth[0].toLowerCase(), pass: auth[1]};
       }
     }
   }
