@@ -43,6 +43,7 @@ describe('wedeploy-middleware', () => {
         .get('/')
         .set('Cookie', 'access_token=token')
         .end((err, res) => {
+          assert.strictEqual(currentUser.token, 'token');
           assert.strictEqual(200, res.statusCode);
           server.close(() => done());
         });
@@ -56,6 +57,20 @@ describe('wedeploy-middleware', () => {
         .get('/')
         .set('Cookie', 'foo=bar; access_token=token; access_token=wrong')
         .end((err, res) => {
+          assert.strictEqual(200, res.statusCode);
+          server.close(() => done());
+        });
+    });
+
+    it('should respond as authorized if token present in cookies has special characters', function(
+      done
+    ) {
+      let server = createServer().listen(8888);
+      request(server)
+        .get('/')
+        .set('Cookie', `access_token=${encodeURIComponent('token=4i=')}`)
+        .end((err, res) => {
+          assert.strictEqual(currentUser.token, 'token=4i=');
           assert.strictEqual(200, res.statusCode);
           server.close(() => done());
         });
