@@ -33,7 +33,7 @@ describe('cookies', function() {
     let server = createServer().listen(8888);
     request(server)
       .get('/')
-      .set('Cookie', ['access_token=token'])
+      .set('Cookie', 'access_token=token')
       .end((err, res) => {
         assert.strictEqual(200, res.statusCode);
         server.close(() => done());
@@ -44,7 +44,7 @@ describe('cookies', function() {
     let server = createServer().listen(8888);
     request(server)
       .get('/')
-      .set('Cookie', ['access_token=token', 'access_token=wrong', 'foo=bar'])
+      .set('Cookie', 'foo=bar; access_token=token; access_token=wrong')
       .end((err, res) => {
         assert.strictEqual(200, res.statusCode);
         server.close(() => done());
@@ -55,7 +55,7 @@ describe('cookies', function() {
     let server = createServer().listen(8888);
     request(server)
       .get('/')
-      .set('Cookie', ['foo=bar'])
+      .set('Cookie', 'foo=bar')
       .end((err, res) => {
         assert.strictEqual(401, res.statusCode);
         server.close(() => done());
