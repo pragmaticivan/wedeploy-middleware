@@ -34,10 +34,7 @@ function extractTokenFromCookie(req) {
 
     if (value) {
       value = value.substring(13);
-      if (value.indexOf('%') != -1) {
-        return decodeURIComponent(value);
-      }
-      return value;
+      return decodeURIComponent(value);
     }
   }
 }
