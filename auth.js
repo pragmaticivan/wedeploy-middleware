@@ -33,8 +33,7 @@ function extractTokenFromCookie(req) {
       .find(p => p.trim().startsWith('access_token='));
 
     if (value) {
-      value = value.substring(13);
-      return decodeURIComponent(value);
+      return decodeURIComponent(value.substring(13));
     }
   }
 }
