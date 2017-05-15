@@ -85,6 +85,22 @@ describe('wedeploy-middleware', () => {
         server.close(() => done());
       });
     });
+
+    it('should respond as unauthorized and delete access token cookie if token is invalid', function(
+      done
+    ) {
+      let server = createServer(null, true).listen(8888);
+      request(server)
+        .get('/')
+        .set('Cookie', 'access_token=invalidtoken')
+        .end((err, res) => {
+          assert.strictEqual(401, res.statusCode);
+          assert.deepEqual(res.headers['set-cookie'], [
+            'access_token= ; expires=Thu, 01 Jan 1970 00:00:00 GMT',
+          ]);
+          server.close(() => done());
+        });
+    });
   });
 
   describe('querystring', function() {

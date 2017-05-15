@@ -109,6 +109,20 @@ function prepareConfig(config) {
   }
 }
 
+/**
+ * Expires access token.
+ * @param {Object} req
+ * @param {Object} res
+ */
+function maybeExpireAccessTokenCookie(req, res) {
+  let cookie = req.headers.cookie;
+  if (cookie) {
+    res.setHeader('Set-Cookie', [
+      `access_token= ; expires=${new Date(0).toUTCString()}`,
+    ]);
+  }
+}
+
 module.exports = function(config) {
   prepareConfig(config);
 
@@ -138,10 +152,7 @@ module.exports = function(config) {
       }
     }
 
-    if (config.unauthorizedOnly) {
-      if (tokenOrEmail) {
-        handleAuthorizationError(res, config);
-      }
+    if (config.unauthorizedOnly && !tokenOrEmail) {
       next();
       return;
     }
@@ -155,6 +166,11 @@ module.exports = function(config) {
     auth
       .verifyUser(tokenOrEmail, password)
       .then(user => {
+        if (config.unauthorizedOnly) {
+          handleAuthorizationError(res, config);
+          next();
+          return;
+        }
         auth.currentUser = user;
         res.locals = res.locals || {};
         res.locals.auth = auth;
@@ -163,6 +179,11 @@ module.exports = function(config) {
         }
         next();
       })
-      .catch(reason => handleAuthorizationError(res, config));
+      .catch(reason => {
+        maybeExpireAccessTokenCookie(req, res);
+        if (!config.unauthorizedOnly) {
+          handleAuthorizationError(res, config);
+        }
+      });
   };
 };
