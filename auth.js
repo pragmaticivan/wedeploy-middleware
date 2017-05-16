@@ -109,20 +109,6 @@ function prepareConfig(config) {
   }
 }
 
-/**
- * Expires access token.
- * @param {Object} req
- * @param {Object} res
- */
-function maybeExpireAccessTokenCookie(req, res) {
-  let cookie = req.headers.cookie;
-  if (cookie) {
-    res.setHeader('Set-Cookie', [
-      `access_token= ; expires=${new Date(0).toUTCString()}`,
-    ]);
-  }
-}
-
 module.exports = function(config) {
   prepareConfig(config);
 
@@ -152,9 +138,13 @@ module.exports = function(config) {
       }
     }
 
-    if (config.unauthorizedOnly && !tokenOrEmail) {
-      next();
-      return;
+    // If route requires unauthorized only validation and there is no token
+    // or email, it goes to the next middleware.
+    if (config.unauthorizedOnly) {
+      if (!tokenOrEmail) {
+        next();
+        return;
+      }
     }
 
     if (!tokenOrEmail) {
@@ -166,11 +156,15 @@ module.exports = function(config) {
     auth
       .verifyUser(tokenOrEmail, password)
       .then(user => {
+        // If route requires unauthorized only validation
+        // and token or email is valid, it should redirect
+        // to route specified on config or throw an error.
         if (config.unauthorizedOnly) {
           handleAuthorizationError(res, config);
           next();
           return;
         }
+
         auth.currentUser = user;
         res.locals = res.locals || {};
         res.locals.auth = auth;
@@ -180,10 +174,15 @@ module.exports = function(config) {
         next();
       })
       .catch(reason => {
-        maybeExpireAccessTokenCookie(req, res);
-        if (!config.unauthorizedOnly) {
-          handleAuthorizationError(res, config);
+        // If route requires unauthorized only validation
+        // and token or email is invalid, it means the user
+        // is unauthorized, therefore goes to the next
+        // middleware.
+        if (config.unauthorizedOnly) {
+          next();
+          return;
         }
+        handleAuthorizationError(res, config);
       });
   };
 };
