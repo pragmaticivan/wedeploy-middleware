@@ -302,13 +302,15 @@ describe('wedeploy-middleware', () => {
         });
     });
 
-    it('should output custom authorization error', function(done) {
-      let server = createServer(null, false, null, 'doNotEnter').listen(8888);
+    it('should proceed to the next middleware and not throw an error if authorizationError is false', function(
+      done
+    ) {
+      let server = createServer(null, false, null, false).listen(8888);
       request(server)
         .get('/')
-        .set('Authorization', 'Unknown token')
+        .set('Authorization', 'Bearer token')
         .end((err, res) => {
-          assert.deepEqual('doNotEnter', res.body);
+          assert.strictEqual(200, res.statusCode);
           server.close(() => done());
         });
     });
@@ -377,7 +379,7 @@ function createServer(
           redirect: errorRedirectUrl,
           scopes: scopes,
         };
-        if (authorizationError) {
+        if (authorizationError !== undefined) {
           config.authorizationError = authorizationError;
         }
         let authMiddleware = wedeployMiddleware.auth(config);
