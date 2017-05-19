@@ -302,6 +302,17 @@ describe('wedeploy-middleware', () => {
         });
     });
 
+    it('should output custom authorization error', function(done) {
+      let server = createServer(null, false, null, 'doNotEnter').listen(8888);
+      request(server)
+        .get('/')
+        .set('Authorization', 'Unknown token')
+        .end((err, res) => {
+          assert.deepEqual('doNotEnter', res.body);
+          server.close(() => done());
+        });
+    });
+
     it('should proceed to the next middleware and not throw an error if authorizationError is false', function(
       done
     ) {
